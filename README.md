@@ -1,4 +1,4 @@
-# 📚 Alice in Wonderland Chatbot
+# 📚 Alice in Wonderland LLM
 
 This project is a **Retrieval-Augmented Generation (RAG) chatbot** built to answer questions about the book *Alice in Wonderland*. It runs entirely locally using **Ollama** and the powerful **Llama 3** model, optimized to provide accurate, source-based answers while minimizing AI hallucinations.  
 
