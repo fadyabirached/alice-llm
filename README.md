@@ -5,7 +5,6 @@ This project is a **Retrieval-Augmented Generation (RAG) chatbot** built to answ
 You can now also **interact with the bot live in a web browser** via a Streamlit interface.
 
 ---
-<img width="1550" height="902" alt="Screenshot 2025-08-15 124720" src="https://github.com/user-attachments/assets/684f7223-39a8-4b74-9490-04d670416579" />
 
 ## 🚀 Key Features
 
@@ -36,7 +35,7 @@ When a user asks a question:
 
 User Query -> Retrieval (MMR) -> [Relevant Chunks] -> Prompt + LLM -> Final Answer
 
-
+<img width="1550" height="902" alt="Screenshot 2025-08-15 124720" src="https://github.com/user-attachments/assets/684f7223-39a8-4b74-9490-04d670416579" />
 ---
 
 ## 🛠️ Tech Stack
