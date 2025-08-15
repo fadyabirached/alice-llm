@@ -35,7 +35,6 @@ When a user asks a question:
 
 User Query -> Retrieval (MMR) -> [Relevant Chunks] -> Prompt + LLM -> Final Answer
 
-<img width="1550" height="902" alt="Screenshot 2025-08-15 124720" src="https://github.com/user-attachments/assets/684f7223-39a8-4b74-9490-04d670416579" />
 ---
 
 ## 🛠️ Tech Stack
@@ -50,6 +49,8 @@ User Query -> Retrieval (MMR) -> [Relevant Chunks] -> Prompt + LLM -> Final Answ
 - **Environment:** Google Colab (optional for easy setup)
 
 ---
+
+<img width="1550" height="902" alt="Screenshot 2025-08-15 124720" src="https://github.com/user-attachments/assets/684f7223-39a8-4b74-9490-04d670416579" />
 
 ## 📖 Setup and Usage
 
