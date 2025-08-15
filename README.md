@@ -4,6 +4,8 @@ This project is a **Retrieval-Augmented Generation (RAG) chatbot** built to answ
 
 You can now also **interact with the bot live in a web browser** via a Streamlit interface.
 
+![Uploading Screenshot 2025-08-15 124720.png…]()
+
 ---
 
 ## 🚀 Key Features
