@@ -58,12 +58,26 @@ DEFAULT_RETRIEVER_FETCH_K = 20
 # The strict, grounded-answer prompt used across the notebook and the app.
 # Built via concatenation (rather than one long line) purely to satisfy the
 # line-length linter -- the rendered text is identical to a single sentence.
+#
+# Grounded means "never state a fact the context doesn't support" -- it does
+# NOT mean "refuse whenever the question's own premise is wrong." If the
+# context contradicts something the question assumed (e.g. asks who followed
+# whom, backwards), the correct grounded answer is to correct it using the
+# context, not to flatly refuse when the real answer was sitting right there.
+# The refusal line is reserved for when the context truly has nothing
+# relevant -- not as a catch-all for "the question phrased it wrong."
 RAG_PROMPT_TEMPLATE = (
     "Use the following pieces of context to answer the question at the end.\n"
-    "You must answer based ONLY on the provided context.\n"
-    "If the answer is not contained within the text provided, you must say "
-    '"I cannot find that information in the provided text."\n'
-    "Do not provide any information or commentary outside of the given context.\n"
+    "You must answer based ONLY on the provided context -- never state a "
+    "fact the context doesn't support.\n"
+    "If the context contradicts a premise in the question (for example, it "
+    "gets a fact backwards), say so explicitly and give the correct answer "
+    "using the context, instead of just refusing.\n"
+    "If the context truly contains nothing relevant to the question, you "
+    "must say "
+    '"I cannot find that information in the provided text." Do not guess.\n'
+    "Do not provide any information or commentary outside of the given "
+    "context.\n"
     "\n"
     "<context>\n"
     "{context}\n"

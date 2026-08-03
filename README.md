@@ -24,7 +24,7 @@ means and why.
 
 - **High-Quality Embeddings:** Uses `mxbai-embed-large` for highly relevant search results.
 - **Advanced Retrieval:** Implements **Maximal Marginal Relevance (MMR)** to fetch context chunks that are both relevant and diverse.
-- **Grounded Generation:** The LLM answers **only based on the provided text**, reducing hallucinations.
+- **Grounded Generation:** The LLM never states a fact the retrieved text doesn't support. If a question's premise contradicts the book (e.g. gets who-did-what backwards), it corrects the premise using the context instead of refusing or hallucinating — it only refuses outright when the context truly has nothing relevant.
 - **Interactive Web Demo:** A local Streamlit app (`app.py`), or the same demo from Colab via Ngrok/LocalTunnel.
 - **Fully Local & Open-Source:** Runs on your machine with Ollama and open-source models — no API keys required.
 - **Tested Core Logic:** Chunking, prompt construction, and retriever configuration live in a small, unit-tested Python module (`src/rag.py`), not just notebook cells.

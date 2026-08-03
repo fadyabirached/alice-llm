@@ -107,6 +107,21 @@ def test_rag_prompt_template_constant_defines_expected_placeholders():
     assert "{input}" in RAG_PROMPT_TEMPLATE
 
 
+def test_prompt_instructs_correcting_false_premises_instead_of_refusing():
+    """Grounded means "never state a fact the context doesn't support" --
+    not "refuse whenever the question's phrasing is wrong." If a question
+    gets a fact backwards but the context contains the real answer, the
+    prompt must tell the model to correct it using the context rather than
+    fall back to the generic refusal line."""
+    lowered = RAG_PROMPT_TEMPLATE.lower()
+    assert "contradicts" in lowered
+    assert "correct" in lowered
+    # The refusal line must still exist for genuinely irrelevant context --
+    # this isn't removing the anti-hallucination guarantee, just narrowing
+    # when the refusal applies.
+    assert "i cannot find that information in the provided text." in lowered
+
+
 # --------------------------------------------------------------------------
 # RetrieverConfig / build_retriever
 # --------------------------------------------------------------------------
