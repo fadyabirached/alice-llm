@@ -50,14 +50,14 @@ if BACKEND == "groq":
     st.caption(
         "☁️ Live demo backend: generation via Groq's hosted Llama 3, "
         "embeddings run locally on CPU. The default local setup (see "
-        "README) uses Ollama end-to-end instead — no external API."
+        "README) uses Ollama end-to-end instead, with no external API."
     )
 else:
-    st.caption("🖥️ Running locally via Ollama — no data leaves this machine.")
+    st.caption("🖥️ Running locally via Ollama. No data leaves this machine.")
 
 st.write(
     "Ask any question about *Alice's Adventures in Wonderland* and get "
-    "answers grounded in the book's own text — no hallucinated plot points."
+    "answers grounded in the book's own text, with no hallucinated plot points."
 )
 
 if not os.path.exists(BOOK_PATH):
