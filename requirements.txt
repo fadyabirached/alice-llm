@@ -1,0 +1,17 @@
+# Core RAG pipeline (LangChain + FAISS)
+langchain==0.3.30
+langchain-community==0.3.27
+langchain-ollama==0.3.10
+langchain-text-splitters==0.3.11
+
+# Vector store
+faiss-cpu>=1.8,<1.9
+
+# Local Ollama client (used directly to pull/list models)
+ollama>=0.5.3,<1.0.0
+
+# Web demo
+streamlit>=1.38,<1.40
+
+# Colab-only convenience for exposing the Streamlit demo publicly
+pyngrok>=7.0,<8.0

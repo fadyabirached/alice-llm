@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+
+# Notebook checkpoints
+.ipynb_checkpoints/
+
+# Streamlit / ngrok artifacts generated at runtime (Colab)
+ollama.log
+
+# OS
+.DS_Store

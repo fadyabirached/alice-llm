@@ -1,0 +1,4 @@
+# Dev/test-only dependencies (used by tests/ and CI, not by the app itself)
+-r requirements.txt
+pytest>=8.0
+ruff>=0.6
