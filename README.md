@@ -97,7 +97,8 @@ generation half, not the whole pipeline.
 
 ---
 
-<img width="1550" height="902" alt="Screenshot 2025-08-15 124720" src="https://github.com/user-attachments/assets/684f7223-39a8-4b74-9490-04d670416579" />
+<img width="1005" height="803" alt="image" src="https://github.com/user-attachments/assets/23c2a09f-e412-4b8f-ad0d-cfd8c6a58259" />
+
 
 ## 📁 Project Structure
 
