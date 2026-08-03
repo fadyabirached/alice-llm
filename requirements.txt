@@ -5,7 +5,12 @@ langchain-ollama==0.3.10
 langchain-text-splitters==0.3.11
 
 # Vector store
-faiss-cpu>=1.8,<1.9
+# Upper bound kept loose (rather than <1.9) because older faiss-cpu builds
+# have no wheel for newer Python ABIs (e.g. hosts running Python 3.13/3.14)
+# -- verified faiss-cpu 1.14.x still exposes the same IndexFlatL2/add/search
+# API this project uses. See also .python-version, which pins the deployed
+# Python version directly so this stays predictable either way.
+faiss-cpu>=1.8,<2
 
 # Local Ollama client (used directly to pull/list models)
 ollama>=0.5.3,<1.0.0
