@@ -96,10 +96,7 @@ Groq doesn't serve an embeddings API — swapping to Groq only replaces the
 generation half, not the whole pipeline.
 
 ---
-
-<img width="1917" height="906" alt="image" src="https://github.com/user-attachments/assets/cc10635a-8ba1-4c02-a103-cadf8248b608" />
-
-
+<img width="1520" height="867" alt="image" src="https://github.com/user-attachments/assets/bd797140-b1ef-40c5-9a9e-f605084524e0" />
 
 ## 📁 Project Structure
 
