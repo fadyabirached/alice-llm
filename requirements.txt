@@ -16,7 +16,14 @@ faiss-cpu>=1.8,<2
 ollama>=0.5.3,<1.0.0
 
 # Web demo
-streamlit>=1.38,<1.40
+# Upper bound intentionally left open (not <1.40): older Streamlit pins an
+# old Pillow range that has no prebuilt wheel for newer Python ABIs (e.g.
+# Python 3.14), which forces a from-source Pillow build that then fails
+# without system zlib headers. app.py only uses long-stable basic Streamlit
+# APIs (title/info/caption/text_input/spinner/header/expander/json/error/
+# warning/stop, cache_resource), so letting Streamlit float to a current
+# release is safe and sidesteps the wheel problem instead of fighting it.
+streamlit>=1.38
 
 # Colab-only convenience for exposing the Streamlit demo publicly
 pyngrok>=7.0,<8.0
