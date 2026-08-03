@@ -10,7 +10,7 @@ You can interact with it four ways: from the **command line** in the notebook, t
 
 ## 🌐 Live Demo
 
-**[Try it here →](#)** *(deployed on Streamlit Community Cloud — link goes live once deployed; see [Deploying your own](#️-deploying-your-own-live-demo) below)*
+**[Try it here →](https://alice-llm.streamlit.app/)**
 
 The live demo swaps the LLM backend from Ollama to Groq's hosted API, since free
 hosting can't run a local Ollama server. **This is a deployment-only exception —
