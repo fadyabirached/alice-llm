@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/fadyabirached/alice-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/fadyabirached/alice-llm/actions/workflows/ci.yml)
 
-This project is a **Retrieval-Augmented Generation (RAG) chatbot** built to answer questions about the book *Alice in Wonderland*. Its real, default design runs entirely locally using **Ollama** and the open-source **Llama 3** model, optimized to provide accurate, source-based answers while minimizing AI hallucinations — see [Tech Stack](#-tech-stack) and [Live demo vs. local design](#-live-demo-vs-local-design) for the one deliberate exception.
+This project is a **Retrieval-Augmented Generation (RAG) chatbot** built to answer questions about the book *Alice in Wonderland*. Its real, default design runs entirely locally using **Ollama** and the open-source **Llama 3** model, optimized to provide accurate, source-based answers while minimizing AI hallucinations — see [Tech Stack](#️-tech-stack) and [Live demo vs. local design](#-live-demo-vs-local-design) for the one deliberate exception.
 
 You can interact with it four ways: from the **command line** in the notebook, through a **local Streamlit app**, in **Google Colab** with a public URL, or via the **live demo** below.
 
