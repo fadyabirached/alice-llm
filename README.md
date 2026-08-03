@@ -2,9 +2,21 @@
 
 [![CI](https://github.com/fadyabirached/alice-llm/actions/workflows/ci.yml/badge.svg)](https://github.com/fadyabirached/alice-llm/actions/workflows/ci.yml)
 
-This project is a **Retrieval-Augmented Generation (RAG) chatbot** built to answer questions about the book *Alice in Wonderland*. It runs entirely locally using **Ollama** and the open-source **Llama 3** model, optimized to provide accurate, source-based answers while minimizing AI hallucinations.
+This project is a **Retrieval-Augmented Generation (RAG) chatbot** built to answer questions about the book *Alice in Wonderland*. Its real, default design runs entirely locally using **Ollama** and the open-source **Llama 3** model, optimized to provide accurate, source-based answers while minimizing AI hallucinations — see [Tech Stack](#-tech-stack) and [Live demo vs. local design](#-live-demo-vs-local-design) for the one deliberate exception.
 
-You can interact with it three ways: from the **command line** in the notebook, through a **local Streamlit app**, or in **Google Colab** with a public URL.
+You can interact with it four ways: from the **command line** in the notebook, through a **local Streamlit app**, in **Google Colab** with a public URL, or via the **live demo** below.
+
+---
+
+## 🌐 Live Demo
+
+**[Try it here →](#)** *(deployed on Streamlit Community Cloud — link goes live once deployed; see [Deploying your own](#️-deploying-your-own-live-demo) below)*
+
+The live demo swaps the LLM backend from Ollama to Groq's hosted API, since free
+hosting can't run a local Ollama server. **This is a deployment-only exception —
+the project's real design is Ollama end-to-end**, unchanged everywhere else. See
+[Live demo vs. local design](#-live-demo-vs-local-design) for exactly what that
+means and why.
 
 ---
 
@@ -47,13 +59,41 @@ User Query -> Retrieval (MMR) -> [Relevant Chunks] -> Prompt + LLM -> Final Answ
 
 - **Language:** Python 3.11
 - **LLM Orchestration:** LangChain (`langchain`, `langchain-community`, `langchain-ollama`)
-- **LLM Server:** Ollama
-- **Generation Model:** Llama 3 (8B)
-- **Embedding Model:** mxbai-embed-large
+- **LLM Server (default/local):** Ollama
+- **Generation Model (default/local):** Llama 3 (8B)
+- **Embedding Model (default/local):** mxbai-embed-large
+- **LLM Server (live demo only):** Groq's hosted API (`langchain-groq`) — see below
+- **Embedding Model (live demo only):** `sentence-transformers/all-MiniLM-L6-v2`, run locally on CPU (`langchain-huggingface`)
 - **Vector Store:** FAISS (`faiss-cpu`)
 - **Interface:** Streamlit
 - **Testing / CI:** pytest, ruff, GitHub Actions
-- **Environment:** Runs locally, or in Google Colab for easy setup / free GPU access
+- **Environment:** Runs locally, in Google Colab, or deployed to Streamlit Community Cloud
+
+---
+
+## 🔀 Live demo vs. local design
+
+The default, documented, real design of this project is **Ollama end-to-end** —
+generation and embeddings both run locally, no API keys, no data leaves your
+machine. That's what `LLM_BACKEND=ollama` (the default if unset) gives you,
+locally or via the notebook.
+
+Free hosting platforms can't run a local Ollama server, so the **live demo
+only** sets `LLM_BACKEND=groq`, which swaps two things in `src/rag.py`
+(`get_llm` / `get_embeddings`):
+
+| | Local (default) | Live demo (`LLM_BACKEND=groq`) |
+|---|---|---|
+| Generation | Ollama, Llama 3 8B, on your machine | Groq's hosted API, Llama 3 8B (`llama-3.1-8b-instant`) |
+| Embeddings | Ollama, `mxbai-embed-large`, on your machine | `sentence-transformers/all-MiniLM-L6-v2`, still local/CPU, no API key |
+| Requires | Ollama installed + models pulled | `GROQ_API_KEY` (free, from [console.groq.com](https://console.groq.com)) |
+| Data leaves your machine? | No | Only the prompt + retrieved chunks, to Groq, for generation |
+
+Everything else — chunking, FAISS, MMR retrieval, the grounded prompt — is
+identical in both modes; `backend` is a parameter on `build_qa_system()`, not
+a fork of the codebase. Embeddings stay local even in the live demo because
+Groq doesn't serve an embeddings API — swapping to Groq only replaces the
+generation half, not the whole pipeline.
 
 ---
 
@@ -64,14 +104,19 @@ User Query -> Retrieval (MMR) -> [Relevant Chunks] -> Prompt + LLM -> Final Answ
 ```
 alice-llm/
 ├── AliceWonderlandLLM.ipynb   # Interactive walkthrough / Colab entry point
-├── app.py                     # Local Streamlit demo (imports src/rag.py)
+├── app.py                     # Streamlit demo (imports src/rag.py); reads
+│                               #   LLM_BACKEND to pick Ollama vs. Groq
 ├── alice_in_wonderland.txt    # Source text (the knowledge base)
 ├── src/
-│   └── rag.py                 # Reusable, unit-tested RAG pipeline logic
+│   └── rag.py                 # Reusable, unit-tested RAG pipeline logic,
+│                               #   incl. get_llm/get_embeddings backend swap
 ├── tests/
-│   └── test_rag.py            # Tests for the parts of the pipeline that
-│                               #   don't require a running Ollama server
-├── requirements.txt            # Runtime dependencies
+│   ├── test_rag.py             # Tests for pipeline logic that doesn't need
+│   │                            #   a running Ollama server
+│   └── test_backend_selection.py  # Tests for get_llm/get_embeddings
+│                               #   (Ollama vs. Groq), mocked -- no real
+│                               #   server, network call, or model download
+├── requirements.txt            # Runtime deps: Ollama path + live-demo path
 ├── requirements-dev.txt        # + pytest, ruff (for local dev / CI)
 └── .github/workflows/ci.yml    # Lints and runs the test suite on push/PR
 ```
@@ -135,6 +180,30 @@ across notebook cells and an `app.py` written inline via `%%writefile`.
    - **Cell 5 / 6:** Ask questions interactively, or run a single clean test query.
    - **Cell 7 (optional):** Launch the Streamlit demo with a public URL via ngrok.
 
+### Option C — Deploy your own live demo (Streamlit Community Cloud)
+
+This deploys `app.py` with `LLM_BACKEND=groq` (see
+[Live demo vs. local design](#-live-demo-vs-local-design) above for what that
+changes and why free hosting needs it).
+
+1. Get a free Groq API key at [console.groq.com](https://console.groq.com) →
+   API Keys.
+2. Go to [share.streamlit.io](https://share.streamlit.io), sign in with
+   GitHub, click **New app**.
+3. Pick this repo, branch `main`, main file path `app.py`.
+4. Under **Advanced settings → Secrets**, add:
+   ```toml
+   LLM_BACKEND = "groq"
+   GROQ_API_KEY = "your-groq-api-key-here"
+   ```
+5. Click **Deploy**. First load takes a minute or two (downloading the
+   `all-MiniLM-L6-v2` embedding model and building the FAISS index); after
+   that it's cached for the life of the app instance.
+
+No code changes needed — `requirements.txt` already includes the
+`langchain-groq` / `langchain-huggingface` / `sentence-transformers`
+dependencies this path needs, alongside the Ollama ones the local path uses.
+
 ---
 
 ## 🧪 Running the Tests
@@ -160,6 +229,7 @@ of CI and is meant to be exercised locally.
 
 - **Different Book:** Replace `alice_in_wonderland.txt` and update the `file_path` passed to `src.rag.build_qa_system()`.
 - **Different Model:** Change `llm_model` / `embedding_model` in `src.rag.build_qa_system()` (or `ChatOllama(model=...)` in the notebook) to any Ollama model you have pulled.
+- **Different Backend:** Pass `backend="groq"` to `build_qa_system()`, or set the `LLM_BACKEND` env var before running `app.py` — see [Live demo vs. local design](#-live-demo-vs-local-design).
 - **Retriever Tuning:** Adjust `k` and `fetch_k` via `src.rag.RetrieverConfig`.
 - **Prompt Customization:** Edit `RAG_PROMPT_TEMPLATE` in `src/rag.py` for a different tone, style, or instructions.
 

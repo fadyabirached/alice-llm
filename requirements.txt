@@ -15,3 +15,11 @@ streamlit>=1.38,<1.40
 
 # Colab-only convenience for exposing the Streamlit demo publicly
 pyngrok>=7.0,<8.0
+
+# Live-demo-only backend (LLM_BACKEND=groq). Not used by the default local
+# Ollama path -- see README "Live demo" and src/rag.py get_llm/get_embeddings.
+# Included here (rather than a separate requirements file) so Streamlit
+# Community Cloud's single-requirements.txt auto-install picks them up.
+langchain-groq>=0.2,<1.0
+langchain-huggingface>=0.1,<1.0
+sentence-transformers>=3.0,<6.0

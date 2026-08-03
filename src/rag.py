@@ -40,6 +40,17 @@ DEFAULT_CHUNK_OVERLAP = 200
 DEFAULT_EMBEDDING_MODEL = "mxbai-embed-large"
 DEFAULT_LLM_MODEL = "llama3"
 
+# Used only when backend="groq" -- the live Streamlit Cloud demo, where free
+# hosting can't run a local Ollama server. This is NOT the project's real
+# design (see README): it's a swap for that one deployed instance only.
+# Groq occasionally retires/renames models; override with GROQ_MODEL if this
+# one stops working -- see https://console.groq.com/docs/models.
+DEFAULT_DEPLOY_LLM_MODEL = "llama-3.1-8b-instant"
+# Groq doesn't serve embeddings, so the "groq" backend pairs Groq generation
+# with a small CPU-friendly sentence-transformers model instead (downloaded
+# once from Hugging Face, no API key needed for this part).
+DEFAULT_DEPLOY_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+
 DEFAULT_RETRIEVER_SEARCH_TYPE = "mmr"
 DEFAULT_RETRIEVER_K = 8
 DEFAULT_RETRIEVER_FETCH_K = 20
@@ -145,8 +156,64 @@ def format_retrieved_chunks(docs, preview_chars: int = 120) -> List[str]:
 
 
 # --------------------------------------------------------------------------
-# Ollama-backed helpers (require a running local Ollama server)
+# Backend-selected helpers (require either a local Ollama server, or --
+# for backend="groq", used only by the live demo -- a GROQ_API_KEY)
 # --------------------------------------------------------------------------
+
+
+def get_llm(backend: str = "ollama", model: Optional[str] = None, temperature: float = 0):
+    """Build the chat LLM for the given backend.
+
+    * ``"ollama"`` (default): ``ChatOllama`` against a local Ollama server --
+      the project's real, documented design (see README).
+    * ``"groq"``: ``ChatGroq`` calling Groq's hosted API. Used only for the
+      live Streamlit Cloud demo, where free hosting can't run a local
+      Ollama server. Requires ``GROQ_API_KEY`` in the environment.
+    """
+    backend = backend.lower()
+    if backend == "ollama":
+        from langchain_ollama import ChatOllama
+
+        return ChatOllama(model=model or DEFAULT_LLM_MODEL, temperature=temperature)
+
+    if backend == "groq":
+        if not os.getenv("GROQ_API_KEY"):
+            raise RuntimeError(
+                "backend='groq' requires a GROQ_API_KEY environment variable "
+                "(free key at https://console.groq.com)."
+            )
+        from langchain_groq import ChatGroq
+
+        return ChatGroq(
+            model=model or os.getenv("GROQ_MODEL", DEFAULT_DEPLOY_LLM_MODEL),
+            temperature=temperature,
+        )
+
+    raise ValueError(f"Unknown LLM backend {backend!r}; use 'ollama' or 'groq'.")
+
+
+def get_embeddings(backend: str = "ollama", model: Optional[str] = None):
+    """Build the embeddings backend for the given backend name.
+
+    * ``"ollama"`` (default): ``OllamaEmbeddings`` against a local Ollama
+      server, same as ``get_llm``.
+    * ``"groq"``: Groq doesn't serve an embeddings API, so this pairs Groq
+      generation with a small local CPU sentence-transformers model instead
+      -- no API key needed for this half, just a one-time download from
+      Hugging Face on first run.
+    """
+    backend = backend.lower()
+    if backend == "ollama":
+        from langchain_ollama import OllamaEmbeddings
+
+        return OllamaEmbeddings(model=model or DEFAULT_EMBEDDING_MODEL)
+
+    if backend == "groq":
+        from langchain_huggingface import HuggingFaceEmbeddings
+
+        return HuggingFaceEmbeddings(model_name=model or DEFAULT_DEPLOY_EMBEDDING_MODEL)
+
+    raise ValueError(f"Unknown embeddings backend {backend!r}; use 'ollama' or 'groq'.")
 
 
 def build_vectorstore(splits: List[Document], embeddings):
@@ -163,21 +230,20 @@ def build_vectorstore(splits: List[Document], embeddings):
 def build_rag_chain(
     vectorstore,
     llm=None,
-    llm_model: str = DEFAULT_LLM_MODEL,
+    llm_model: Optional[str] = None,
+    backend: str = "ollama",
     retriever_config: Optional[RetrieverConfig] = None,
 ):
     """Assemble the full retrieval chain from a vectorstore and an LLM.
 
     Pass an existing ``llm`` (e.g. for testing with a fake model) or let it
-    default to ``ChatOllama(model=llm_model, temperature=0)``.
+    be built from ``backend``/``llm_model`` via :func:`get_llm`.
     """
     from langchain.chains import create_retrieval_chain
     from langchain.chains.combine_documents import create_stuff_documents_chain
 
     if llm is None:
-        from langchain_ollama import ChatOllama
-
-        llm = ChatOllama(model=llm_model, temperature=0)
+        llm = get_llm(backend=backend, model=llm_model)
 
     retriever = build_retriever(vectorstore, retriever_config)
     prompt = build_prompt_template()
@@ -187,24 +253,25 @@ def build_rag_chain(
 
 def build_qa_system(
     file_path: str = "alice_in_wonderland.txt",
-    embedding_model: str = DEFAULT_EMBEDDING_MODEL,
-    llm_model: str = DEFAULT_LLM_MODEL,
+    embedding_model: Optional[str] = None,
+    llm_model: Optional[str] = None,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
     chunk_overlap: int = DEFAULT_CHUNK_OVERLAP,
+    backend: str = "ollama",
     retriever_config: Optional[RetrieverConfig] = None,
 ):
     """End-to-end pipeline: load, split, embed, index, and wire up the chain.
 
-    Requires a running Ollama server with ``embedding_model`` and
-    ``llm_model`` pulled locally (see the README for setup). This is the
-    function both the notebook and ``app.py`` call to get a ready-to-use
-    ``retrieval_chain``.
+    ``backend="ollama"`` (default) requires a running Ollama server with
+    ``embedding_model``/``llm_model`` pulled locally -- the project's real
+    design (see README). ``backend="groq"`` is used only by the live demo
+    deployment; see :func:`get_llm` / :func:`get_embeddings`. This is the
+    function the notebook, ``app.py``, and the live demo all call to get a
+    ready-to-use ``retrieval_chain``.
     """
-    from langchain_ollama import OllamaEmbeddings
-
     splits = load_and_split_documents(file_path, chunk_size, chunk_overlap)
-    embeddings = OllamaEmbeddings(model=embedding_model)
+    embeddings = get_embeddings(backend=backend, model=embedding_model)
     vectorstore = build_vectorstore(splits, embeddings)
     return build_rag_chain(
-        vectorstore, llm_model=llm_model, retriever_config=retriever_config
+        vectorstore, llm_model=llm_model, backend=backend, retriever_config=retriever_config
     )
