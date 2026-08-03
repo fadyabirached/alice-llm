@@ -24,6 +24,19 @@ from src.rag import build_qa_system
 BOOK_PATH = "alice_in_wonderland.txt"
 BACKEND = os.getenv("LLM_BACKEND", "ollama").lower()
 
+EXAMPLE_QUESTIONS = [
+    "Who is the White Rabbit?",
+    "What happens at the Mad Hatter's tea party?",
+    "Why does Alice change size?",
+    "Who is the Queen of Hearts?",
+]
+
+st.set_page_config(
+    page_title="Chat with Alice in Wonderland",
+    page_icon="🐇",
+    layout="centered",
+)
+
 
 @st.cache_resource
 def get_qa_chain():
@@ -42,9 +55,9 @@ if BACKEND == "groq":
 else:
     st.caption("🖥️ Running locally via Ollama — no data leaves this machine.")
 
-st.info(
-    "Ask any question about 'Alice's Adventures in Wonderland' and get "
-    "answers grounded in the book's text."
+st.write(
+    "Ask any question about *Alice's Adventures in Wonderland* and get "
+    "answers grounded in the book's own text — no hallucinated plot points."
 )
 
 if not os.path.exists(BOOK_PATH):
@@ -65,8 +78,19 @@ except Exception as e:
         )
     st.stop()
 
+if "user_query" not in st.session_state:
+    st.session_state.user_query = ""
+
+st.write("**Try an example:**")
+cols = st.columns(2)
+for i, question in enumerate(EXAMPLE_QUESTIONS):
+    if cols[i % 2].button(question, use_container_width=True):
+        st.session_state.user_query = question
+
 user_query = st.text_input(
-    "Ask a question:", placeholder="e.g., Why did Alice follow the White Rabbit?"
+    "Ask a question:",
+    key="user_query",
+    placeholder="e.g., Why did Alice follow the White Rabbit?",
 )
 
 if user_query:
