@@ -28,7 +28,7 @@ EXAMPLE_QUESTIONS = [
     "Who is the White Rabbit?",
     "What happens at the Mad Hatter's tea party?",
     "Why does Alice change size?",
-    "Who is the Queen of Hearts?",
+    "How does Alice end up in Wonderland?",
 ]
 
 st.set_page_config(
