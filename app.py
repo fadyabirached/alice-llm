@@ -4,7 +4,7 @@
 
 Built on the reusable `src.rag` module rather than redefining the pipeline
 inline. The LLM_BACKEND env var picks the backend, defaulting to "ollama";
-the hosted demo sets it to "groq" because free hosting can't run a local
+the hosted demo sets it to "groq" because free hosting cannot run a local
 Ollama server. See README "Live demo" for what that swap changes.
 """
 import os
@@ -40,24 +40,9 @@ def get_qa_chain():
 
 st.title("🐇 Chat with Alice in Wonderland")
 st.caption(
-    "Ask anything about the book. Every answer is drawn from its actual "
-    "text, so it won't invent plot points."
+    "Ask anything about the book. Every answer comes from its actual text, "
+    "so it will not invent plot points."
 )
-
-# How the thing is wired is worth documenting, but it's the last thing a
-# visitor needs in order to start typing -- so it lives out of the way.
-with st.sidebar:
-    st.subheader("How this works")
-    st.write(
-        "The book is split into passages and embedded into a FAISS index. "
-        "Your question retrieves the most relevant passages, and the model "
-        "answers using only those — that's what keeps it from making things up."
-    )
-    st.caption(
-        "Running on Groq's hosted Llama 3, with embeddings computed locally."
-        if BACKEND == "groq"
-        else "Running locally on Ollama. No data leaves this machine."
-    )
 
 if not os.path.exists(BOOK_PATH):
     st.warning(f"'{BOOK_PATH}' was not found next to app.py. Please add it to begin.")
@@ -93,7 +78,7 @@ def show_sources(snippets):
 typed = st.chat_input("Ask about Alice in Wonderland...")
 question = typed or st.session_state.pop("pending", None)
 
-# Suggestions only help before the conversation starts; after that the chat
+# Suggestions only help before the conversation starts. After that the chat
 # box is the obvious thing to use.
 if not st.session_state.messages and not question:
     st.write("**Not sure where to start?**")

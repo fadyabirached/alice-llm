@@ -6,10 +6,10 @@ into a plain, importable, testable library.
 
 Functions are split into two groups:
 
-* **Pure / local** — text chunking, prompt construction, retriever
+* **Pure / local**: text chunking, prompt construction, retriever
   configuration, and result formatting. These do not touch the network
   or a local model and are covered by the test suite in ``tests/``.
-* **Ollama-backed** — building embeddings, a FAISS vector store, and the
+* **Ollama-backed**: building embeddings, a FAISS vector store, and the
   full retrieval chain. These require a running Ollama server with the
   ``mxbai-embed-large`` and ``llama3`` models pulled locally, so they are
   not exercised in CI and their heavier imports are deferred until the
