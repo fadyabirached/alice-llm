@@ -1,19 +1,11 @@
-"""Streamlit demo for the Alice in Wonderland RAG chatbot.
-
-Run locally (after starting Ollama and pulling the required models — see
-README.md):
+"""Streamlit chat demo for the Alice in Wonderland RAG pipeline.
 
     streamlit run app.py
 
-This is the local, non-Colab counterpart to the notebook's Streamlit cell:
-same pipeline, built on top of the reusable `src.rag` module instead of
-being redefined inline.
-
-Backend: controlled by the LLM_BACKEND env var, defaulting to "ollama" (the
-project's real design). The live Streamlit Cloud demo sets LLM_BACKEND=groq
-instead, since free hosting can't run a local Ollama server — see README
-"Live demo" section for why, and src/rag.py's get_llm/get_embeddings for
-what that swap actually changes.
+Built on the reusable `src.rag` module rather than redefining the pipeline
+inline. The LLM_BACKEND env var picks the backend, defaulting to "ollama";
+the hosted demo sets it to "groq" because free hosting can't run a local
+Ollama server. See README "Live demo" for what that swap changes.
 """
 import os
 
@@ -31,6 +23,8 @@ EXAMPLE_QUESTIONS = [
     "How does Alice end up in Wonderland?",
 ]
 
+SNIPPET_CHARS = 320
+
 st.set_page_config(
     page_title="Chat with Alice in Wonderland",
     page_icon="🐇",
@@ -45,27 +39,32 @@ def get_qa_chain():
 
 
 st.title("🐇 Chat with Alice in Wonderland")
-
-if BACKEND == "groq":
-    st.caption(
-        "☁️ Live demo backend: generation via Groq's hosted Llama 3, "
-        "embeddings run locally on CPU. The default local setup (see "
-        "README) uses Ollama end-to-end instead, with no external API."
-    )
-else:
-    st.caption("🖥️ Running locally via Ollama. No data leaves this machine.")
-
-st.write(
-    "Ask any question about *Alice's Adventures in Wonderland* and get "
-    "answers grounded in the book's own text, with no hallucinated plot points."
+st.caption(
+    "Ask anything about the book. Every answer is drawn from its actual "
+    "text, so it won't invent plot points."
 )
+
+# How the thing is wired is worth documenting, but it's the last thing a
+# visitor needs in order to start typing -- so it lives out of the way.
+with st.sidebar:
+    st.subheader("How this works")
+    st.write(
+        "The book is split into passages and embedded into a FAISS index. "
+        "Your question retrieves the most relevant passages, and the model "
+        "answers using only those — that's what keeps it from making things up."
+    )
+    st.caption(
+        "Running on Groq's hosted Llama 3, with embeddings computed locally."
+        if BACKEND == "groq"
+        else "Running locally on Ollama. No data leaves this machine."
+    )
 
 if not os.path.exists(BOOK_PATH):
     st.warning(f"'{BOOK_PATH}' was not found next to app.py. Please add it to begin.")
     st.stop()
 
 try:
-    with st.spinner("Getting Wonderland ready for your questions (first run only)..."):
+    with st.spinner("Getting the book ready (first run only)..."):
         qa_chain = get_qa_chain()
 except Exception as e:
     if BACKEND == "groq":
@@ -78,35 +77,56 @@ except Exception as e:
         )
     st.stop()
 
-if "user_query" not in st.session_state:
-    st.session_state.user_query = ""
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-st.write("**Try an example:**")
-cols = st.columns(2)
-for i, question in enumerate(EXAMPLE_QUESTIONS):
-    if cols[i % 2].button(question, use_container_width=True):
-        st.session_state.user_query = question
 
-user_query = st.text_input(
-    "Ask a question:",
-    key="user_query",
-    placeholder="e.g., Why did Alice follow the White Rabbit?",
-)
+def show_sources(snippets):
+    with st.expander(f"Passages used ({len(snippets)})"):
+        for snippet in snippets:
+            st.markdown(f"> {snippet}")
 
-if user_query:
-    with st.spinner("Searching for answers in Wonderland..."):
-        response = qa_chain.invoke({"input": user_query})
-        st.header("Answer:", divider="rainbow")
-        st.write(response["answer"])
 
-        with st.expander("Show Context Used"):
-            st.write(
-                "These are the exact snippets from the book used to "
-                "generate the answer above."
-            )
-            st.json(
-                [
-                    {"content": doc.page_content, "metadata": doc.metadata}
-                    for doc in response["context"]
-                ]
-            )
+# Resolved before anything renders so that a question already in flight
+# takes the suggestions off screen in the same pass, rather than leaving
+# them sitting above the first answer.
+typed = st.chat_input("Ask about Alice in Wonderland...")
+question = typed or st.session_state.pop("pending", None)
+
+# Suggestions only help before the conversation starts; after that the chat
+# box is the obvious thing to use.
+if not st.session_state.messages and not question:
+    st.write("**Not sure where to start?**")
+    columns = st.columns(2)
+    for index, suggestion in enumerate(EXAMPLE_QUESTIONS):
+        if columns[index % 2].button(suggestion, use_container_width=True):
+            st.session_state.pending = suggestion
+            st.rerun()
+
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.write(message["content"])
+        if message.get("sources"):
+            show_sources(message["sources"])
+
+if question:
+    st.session_state.messages.append({"role": "user", "content": question})
+    with st.chat_message("user"):
+        st.write(question)
+
+    with st.chat_message("assistant"):
+        with st.spinner("Looking through the book..."):
+            response = qa_chain.invoke({"input": question})
+
+        answer = response["answer"]
+        sources = [
+            " ".join(doc.page_content.split())[:SNIPPET_CHARS] + "..."
+            for doc in response["context"]
+        ]
+
+        st.write(answer)
+        show_sources(sources)
+
+    st.session_state.messages.append(
+        {"role": "assistant", "content": answer, "sources": sources}
+    )
